@@ -1,3 +1,4 @@
+#A simple script to compare contents of a.txt with b.txt and generate the otuput.txt with entries not present in a.txt 
 #To use this script, follow these steps:
 
 #Create two text files: a.txt and b.txt, with each entry on a new line.
