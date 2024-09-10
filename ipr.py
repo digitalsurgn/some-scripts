@@ -3,35 +3,32 @@
 # Command : python3 ipr.py 
 # Make sure in the same directory there is a.txt with subdomain/domains names ,single entery per line.
 
-import socket
+import dns.resolver
 
-def resolve_domains(input_file, output_file):
-    dns_servers = ['8.8.8.8', '1.1.1.1']
+def resolve_domain(domain):
+    resolver = dns.resolver.Resolver()
+    resolver.nameservers = ['8.8.8.8', '1.1.1.1']
     
-    with open(input_file, 'r') as f:
-        domains = f.read().splitlines()
+    try:
+        result = resolver.query(domain, 'A')
+        ip_addresses = ', '.join(str(ip) for ip in result)
+        return ip_addresses
+    except dns.resolver.NXDOMAIN:
+        return "Domain not found"
+    except dns.resolver.Timeout:
+        return "Timeout"
+    except Exception as e:
+        return str(e)
 
-    resolved_domains = []
-    
-    for domain in domains:
-        for dns_server in dns_servers:
-            try:
-                ip_info_list = socket.getaddrinfo(domain, None, socket.AF_INET)
-                ip_addresses = [ip_info[4][0] for ip_info in ip_info_list]
-                if ip_addresses:
-                    resolved_domains.append((domain, ip_addresses))
-                break
-            except socket.gaierror:
-                pass  # If domain couldn't be resolved, try the next DNS server
+input_filename = "a.txt"
+output_filename = "output.txt"
 
-    with open(output_file, 'w') as f:
-        for domain, ip_addresses in resolved_domains:
-            for ip in ip_addresses:
-                f.write(f"{domain},{ip}\n")
+with open(input_filename, 'r') as input_file, open(output_filename, 'w') as output_file:
+    for line in input_file:
+        domain = line.strip()
+        ip_addresses = resolve_domain(domain)
+        output_line = f"{domain}, {ip_addresses}\n"
+        output_file.write(output_line)
 
-if __name__ == "__main__":
-    input_file = "a.txt"
-    output_file = "output.txt"
-    resolve_domains(input_file, output_file)
-    print("DNS resolution complete. Check output.txt for results.")
+print("IP addresses resolved and written to output.txt.")
 
